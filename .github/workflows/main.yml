@@ -1,7 +1,43 @@
 name: GitHub Actions Demo for VulnNodeApp
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+run-name: ${{ github.actor }} is test this App 🚀
 on: [push]
 jobs:
+  gitleaks:
+    name: Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2.3.2 
+
+  semgrep-sast:
+    name: SAST Semgrep
+    runs-on: ubuntu-latest
+    permissions:
+      # required for all workflows
+      security-events: write
+      actions: read
+      contents: read
+    container: returntocorp/semgrep
+    steps:
+      - uses: actions/checkout@v3
+      - run: semgrep ci --sarif --output=semgrep.sarif || true
+        env:
+            SEMGREP_RULES: p/default
+      - run: semgrep ci --json --output=semgrep.json || true
+        env:
+          SEMGREP_RULES: p/default
+      - name: Upload Semgrep scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'semgrep.sarif'
+      - name: Semgrep Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: semgrep.json
+          path: semgrep.json
+
   build_and_deploy:
     runs-on: ubuntu-latest
     name: build-and-deploy-app
