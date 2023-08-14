@@ -38,9 +38,32 @@ jobs:
           name: semgrep.json
           path: semgrep.json
 
-  build_and_deploy:
+  SCA_npmaudit:
+    name: npm audit
     runs-on: ubuntu-latest
-    name: build-and-deploy-app
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
     steps:
-      - name: first-step
-        run: ssh 
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Setup nodev16
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+    - name: Run npmaudit
+      run: npm audit --registry=https://registry.npmjs.org  --json > report_npmaudit.json
+      continue-on-error: true   
+    - name: Upload npmaudit artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: npm audit
+        path: report_npmaudit.json 
+
+  # build_and_deploy:
+  #   runs-on: ubuntu-latest
+  #   name: build-and-deploy-app
+  #   steps:
+  #     - name: first-step
+  #       run: ssh 
