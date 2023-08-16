@@ -132,10 +132,10 @@ jobs:
         continue-on-error: true
         
       - name: Create ECR repository if not exists
-        run: |
-          if [ "${{ steps.check_repo.outcome }}" != "success" ]; then
-            aws ecr create-repository --repository-name challenge-app
-          fi
+        run: aws ecr create-repository --repository-name challenge-app
+          #if [ "${{ steps.check_repo.outcome }}" != "success" ]; then
+          #  aws ecr create-repository --repository-name challenge-app
+          #fi
         continue-on-error: true
         
       - name: Tag Docker image
