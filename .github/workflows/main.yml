@@ -103,6 +103,30 @@ jobs:
           name: trivy
           path: trivy-results.json
 
+  Snyk:
+    # Vamos a correr el analisis de Snyk free
+    runs-on: ubuntu-latest
+    permissions: 
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        continue-on-error: true # To make sure that SARIF upload gets called
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: 
+            --sarif-file-output=snyk.sarif
+            --file=package.json
+            npm install
+      - name: Upload result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: snyk.sarif
+
   deploy:
     runs-on: ubuntu-latest
 
@@ -116,7 +140,10 @@ jobs:
           node-version: 14
 
       - name: Build Docker image
-        run: docker build -t challenge-app .
+        run: |
+          docker build -t challenge-app -f Dockerfile .
+          docker build -t challenge-db -f Dockerfile.mysql .
+
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -141,6 +168,7 @@ jobs:
       - name: Tag Docker image
         run: |
           docker tag challenge-app "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-app:latest"
+          docker tag challenge-db "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-db:latest"
         
       - name: Log in to Amazon ECR
         id: ecr_login
@@ -150,6 +178,7 @@ jobs:
       - name: Push Docker image to Amazon ECR
         run: |
          docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-app:latest"
+         docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-db:latest"
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
@@ -160,30 +189,33 @@ jobs:
           script: |
             aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com"
             docker pull "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-app:latest"
+            docker pull "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-db:latest"
             docker stop challenge-app || true
+            docker stop challenge-db || true
             docker rm challenge-app || true
+            docker rm challenge-db || true
             docker run -d --name challenge-app -p 80:3000 "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-app:latest"  
+            docker run -d --name challenge-db -p 80:3000 "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-db:latest"  
 
-  DAST_OWASPZAP:
-      runs-on: ubuntu-latest
-      needs: deploy
-      name: Run DAST scan on the web application
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v3
-          with:
-            ref: master
-        - name: Run ZAP Scan with zap2docker-stable full-scan
-          uses: zaproxy/action-full-scan@v0.5.1
-          with:
-            docker_name: 'owasp/zap2docker-stable'
-            target: 'NOMBREAPP'
-            rules_file_name: '.zap/rules.tsv'
-            cmd_options: '-a'
-            artifact_name: 'zap'
-            allow_issue_writing: false
-        - name: Upload ZAP artifact
-          uses: actions/upload-artifact@v3
-          with:
-            name: zap-dast
-            path: zap-dast
+  zap_scan:
+    # Vamos a correr Zap de OWASP DAST
+    runs-on: ubuntu-latest
+    needs: deploy
+    name: Run ZAP Full Scan - DAST
+    permissions:
+      #required for all workflows
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      # - name: Checkout
+      #   uses: actions/checkout@v2
+      #   with:
+      #     ref: master
+      - name: ZAP Scan
+        uses: zaproxy/action-full-scan@v0.5.1
+        with:
+          docker_name: 'owasp/zap2docker-stable'
+          target: 'http://${{ secrets.EC2_HOST }}'
+          cmd_options: '-a'
+          allow_issue_writing: false
