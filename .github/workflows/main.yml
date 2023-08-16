@@ -132,10 +132,10 @@ jobs:
         continue-on-error: true
         
       - name: Create ECR repository if not exists
-        run: aws ecr create-repository --repository-name challenge-app
-          #if [ "${{ steps.check_repo.outcome }}" != "success" ]; then
-          #  aws ecr create-repository --repository-name challenge-app
-          #fi
+        run: |
+          if [ "${{ steps.check_repo.outcome }}" != "success" ]; then
+            aws ecr create-repository --repository-name challenge-app
+          fi
         continue-on-error: true
         
       - name: Tag Docker image
@@ -145,8 +145,7 @@ jobs:
       - name: Log in to Amazon ECR
         id: ecr_login
         run: |
-          AWS_ECR_LOGIN=$(aws ecr get-login-password --region us-east-2)
-          eval $AWS_ECR_LOGIN
+          aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 183038503675.dkr.ecr.us-east-2.amazonaws.com
 
       - name: Push Docker image to Amazon ECR
         run: |
