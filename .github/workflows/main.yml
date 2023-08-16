@@ -158,9 +158,9 @@ jobs:
       #     aws ecr describe-repositories --repository-names challenge-app || exit 0
       #   continue-on-error: true
         
-      - name: Create ECR repository if not exists
-        run: aws ecr create-repository --repository-name challenge-db
-        continue-on-error: true
+      # - name: Create ECR repository
+      #   run: aws ecr create-repository --repository-name challenge-db
+      #   continue-on-error: true
         
       - name: Tag Docker image
         run: |
