@@ -142,10 +142,6 @@ jobs:
         run: |
           docker tag challenge-app "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/challenge-app:latest"
         
-      - name: Push Docker image to Amazon ECR
-        run: |
-          docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/challenge-app:latest"
-
       - name: Log in to Amazon ECR
         id: ecr_login
         run: |
@@ -153,7 +149,7 @@ jobs:
 
       - name: Push Docker image to Amazon ECR
         run: |
-          docker push ${{ steps.ecr_login.outputs.registry }}:latest
+         docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/challenge-app:latest"
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
