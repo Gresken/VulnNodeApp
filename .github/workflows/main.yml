@@ -145,7 +145,7 @@ jobs:
       - name: Log in to Amazon ECR
         id: ecr_login
         run: |
-          aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 183038503675.dkr.ecr.us-east-2.amazonaws.com
+          aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com
 
       - name: Push Docker image to Amazon ECR
         run: |
@@ -160,9 +160,8 @@ jobs:
           script: |
             docker stop challenge-app || true
             docker rm challenge-app || true
-            docker pull ${{ steps.ecr_login.outputs.registry }}:latest
-            docker run -d --name challenge-app -p 80:3000 ${{ steps.ecr_login.outputs.registry }}:latest
-        
+            docker pull "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-app:latest"
+            docker run -d --name challenge-app -p 80:3000 "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-app:latest"  
 
   DAST_OWASPZAP:
       runs-on: ubuntu-latest
