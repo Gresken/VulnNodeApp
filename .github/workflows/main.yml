@@ -133,7 +133,7 @@ jobs:
         
       - name: Create ECR repository if not exists
         run: |
-          if [ "${{ steps.check_repo.outcome }}" == "failure" ]; then
+          if [ "${{ steps.check_repo.outcome }}" != "success" ]; then
             aws ecr create-repository --repository-name challenge-app
           fi
         continue-on-error: true
