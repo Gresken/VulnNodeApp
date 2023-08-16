@@ -152,17 +152,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2  # Cambia esto a la región adecuada
 
-      - name: Check if repository exists
-        id: check_repo
-        run: |
-          aws ecr describe-repositories --repository-names challenge-app || exit 0
-        continue-on-error: true
+      # - name: Check if repository exists
+      #   id: check_repo
+      #   run: |
+      #     aws ecr describe-repositories --repository-names challenge-app || exit 0
+      #   continue-on-error: true
         
       - name: Create ECR repository if not exists
-        run: |
-          if [ "${{ steps.check_repo.outcome }}" != "success" ]; then
-            aws ecr create-repository --repository-name challenge-app
-          fi
+        run: aws ecr create-repository --repository-name challenge-db
         continue-on-error: true
         
       - name: Tag Docker image
