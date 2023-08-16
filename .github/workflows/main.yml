@@ -128,7 +128,7 @@ jobs:
       - name: Create ECR repository
         run: |
           aws ecr create-repository --repository-name challenge-app || true
-          docker tag challenge-app "${{ steps.ecr_login.outputs.registry }}:latest"
+          docker tag challenge-app "${{ steps.ecr_login.outputs.registry }}/challenge-app:latest"
 
       - name: Log in to Amazon ECR
         id: ecr_login
