@@ -140,16 +140,16 @@ jobs:
         
       - name: Tag Docker image
         run: |
-          docker tag challenge-app "${{ steps.ecr_login.outputs.registry }}/challenge-app:latest"
+          docker tag challenge-app "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/challenge-app:latest"
         
       - name: Push Docker image to Amazon ECR
         run: |
-          docker push "${{ steps.ecr_login.outputs.registry }}/challenge-app:latest"
+          docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/challenge-app:latest"
 
       - name: Log in to Amazon ECR
         id: ecr_login
         run: |
-          echo ${{ secrets.AWS_SECRET_ACCESS_KEY }} | docker login -u AWS --password-stdin ${{ steps.ecr_login.outputs.registry }}
+          echo ${{ secrets.AWS_SECRET_ACCESS_KEY }} | docker login -u AWS --password-stdin "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com"
 
       - name: Push Docker image to Amazon ECR
         run: |
