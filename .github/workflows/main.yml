@@ -158,9 +158,10 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com"
+            docker pull "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-app:latest"
             docker stop challenge-app || true
             docker rm challenge-app || true
-            docker pull "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-app:latest"
             docker run -d --name challenge-app -p 80:3000 "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-app:latest"  
 
   DAST_OWASPZAP:
