@@ -145,7 +145,8 @@ jobs:
       - name: Log in to Amazon ECR
         id: ecr_login
         run: |
-          echo ${{ secrets.AWS_SECRET_ACCESS_KEY }} | docker login -u AWS --password-stdin "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com"
+          AWS_ECR_LOGIN=$(aws ecr get-login-password --region us-east-1)
+          eval $AWS_ECR_LOGIN
 
       - name: Push Docker image to Amazon ECR
         run: |
