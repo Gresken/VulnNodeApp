@@ -192,7 +192,7 @@ jobs:
             docker rm challenge-app || true
             docker rm challenge-db || true
             docker run -d --name challenge-app -p 80:3000 "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-app:latest"  
-            docker run -d --name challenge-db -p 80:3000 "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-db:latest"  
+            docker run -d --name challenge-db -p 3306:3306 "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/challenge-db:latest"  
 
   zap_scan:
     # Vamos a correr Zap de OWASP DAST
